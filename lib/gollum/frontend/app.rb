@@ -3,7 +3,9 @@ require 'sinatra'
 require 'gollum'
 require 'mustache/sinatra'
 require 'useragent'
+require 'digest/sha1'
 
+require 'gollum/frontend/app'
 require 'gollum/frontend/views/layout'
 require 'gollum/frontend/views/editable'
 
@@ -23,6 +25,37 @@ require File.expand_path '../uri_encode_component', __FILE__
 module Precious
   class App < Sinatra::Base
     register Mustache::Sinatra
+
+      User = Struct.new(:name, :email, :password)
+
+	  before { authenticate! }
+	
+	  helpers do
+		def authenticate!
+		  @_auth ||=  Rack::Auth::Basic::Request.new(request.env)
+		  if @_auth.provided?
+		  end
+		  if @_auth.provided? && @_auth.basic? && @_auth.credentials &&
+			@user = detected_user(@_auth.credentials)
+			return @user
+		  else
+			response['WWW-Authenticate'] = %(Basic realm="Gollum Wiki")
+			throw(:halt, [401, "Not authorized\n"])
+		  end
+		end
+	
+		def users
+		  @_users ||= settings.authorized_users.map {|u| User.new(*u) }
+		end
+	
+		def detected_user(credentials)
+		  users.detect do |u|
+
+			[u.email, u.password] ==
+			[credentials[0], credentials[1]]
+		  end
+		end
+	  end
 
     dir = File.dirname(File.expand_path(__FILE__))
 
@@ -267,7 +300,11 @@ module Precious
     end
 
     def commit_message
-      { :message => params[:message] }
+      { 
+      	:message => params[:message],
+		:name => @user.name,
+      	:email => @user.email
+      }
     end
   end
 end
