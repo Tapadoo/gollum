@@ -535,6 +535,8 @@ your changes merged back into core is as follows:
 
 # Authentication Stuff
 
+All these auth modifications are based heavily from this gist https://gist.github.com/2224709 , if they were already implemented in a fork I couldn't find it.
+
 in your wiki directory, create a users.yml file containing User names, emails, and plain-text passwords. Seeing as everything is in plaintext until I get it working with digest again (possibly) 
 
     ---
