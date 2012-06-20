@@ -531,3 +531,34 @@ your changes merged back into core is as follows:
     $ cd gollum
     gollum$ rake build
     gollum$ gem install pkg/gollum*.gem
+    
+
+# Authentication Stuff
+
+in your wiki directory, create a users.yml file containing User names, emails, and plain-text passwords. Seeing as everything is in plaintext until I get it working with digest again (possibly) 
+
+    ---
+    - - Adam
+      - adam@domain.com
+      - password
+    - - Jason
+      - jason@domain.com
+      - password
+
+The User name and email from this file is what will be used for the wiki edit log (and git commit message).
+
+Next, your config.ru file in the wiki directory should look like this. Create it if you need to :
+    
+    #!/usr/bin/env ruby
+    require 'rubygems'
+    require 'yaml'
+    require 'gollum/frontend/app'
+
+    gollum_path = File.expand_path(File.dirname('./'))
+    Precious::App.set(:gollum_path, gollum_path)
+    Precious::App.set(:default_markup, :markdown) # set your favorite markup language
+    Precious::App.set(:wiki_options, {:universal_toc => false})
+    Precious::App.set(:authorized_users, YAML.load_file(File.expand_path('users.yml', gollum_path)))
+    run Precious::App
+
+start the wiki then from the wiki directory with a `rackup --port 8114` or however do do rack stuff
